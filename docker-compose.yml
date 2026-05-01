@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   plakar-backup:
-    image: ghcr.io/orangees/plakar-docker:latest
+    image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-backup
     restart: "no"
     env_file: .env
@@ -17,7 +17,7 @@ services:
       /data
 
   plakar-ui:
-    image: ghcr.io/orangees/plakar-docker:latest
+    image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-ui
     restart: unless-stopped
     env_file: .env
