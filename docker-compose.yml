@@ -9,7 +9,7 @@ services:
     env_file: .env
     volumes:
       - ${BACKUP_SOURCE}:/data:ro
-      - /volume1/plakar/kloset:/home/plakar/.plakar
+      - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
       - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
       - TZ=${TZ:-UTC}
@@ -25,7 +25,7 @@ services:
     ports:
       - "${PLAKAR_UI_PORT:-9000}:9000"
     volumes:
-      - /volume1/plakar/kloset:/home/plakar/.plakar
+      - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
       - TZ=${TZ:-UTC}
     command: ui --listen 0.0.0.0:9000
