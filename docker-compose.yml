@@ -5,7 +5,6 @@ services:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-agent
     restart: unless-stopped
-    user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
     env_file: .env
     volumes:
       - ${BACKUP_SOURCE}:/data:ro
@@ -20,7 +19,6 @@ services:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-ui
     restart: unless-stopped
-    user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
     env_file: .env
     ports:
       - "${PLAKAR_UI_PORT:-9000}:9000"
