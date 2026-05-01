@@ -13,7 +13,6 @@ services:
       - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
       - TZ=${TZ:-UTC}
     command: agent
-    profiles: ["agent"]
 
   plakar-ui:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
@@ -27,4 +26,3 @@ services:
     environment:
       - TZ=${TZ:-UTC}
     command: ui --listen 0.0.0.0:9000
-    profiles: ["ui"]
