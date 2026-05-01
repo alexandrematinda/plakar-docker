@@ -54,25 +54,17 @@ BACKUP_SOURCE=/volume1/data
 
 **Any S3-compatible storage** (AWS S3, MinIO, etc.) — adjust `S3_ENDPOINT` and `S3_REGION` accordingly.
 
-### 3. Choose a backup strategy
-
-**Option A: Use Plakar's built-in scheduler (Recommended)**
+### 3. Start the backup agent
 
 ```bash
-# Start the agent
+# Start the agent (runs scheduled backups automatically)
 docker-compose up -d --profile agent plakar-agent
 
-# Configure backup schedules using plakar's agent
-# (See plakar documentation for scheduling configuration)
+# Configure backup schedules via plakar's agent configuration
+# (See plakar documentation for scheduling)
 ```
 
-**Option B: Manual/ad-hoc backups**
-
-```bash
-docker-compose run --rm plakar-backup
-```
-
-### 4. (Optional) Launch the UI
+### 4. Launch the UI
 
 ```bash
 docker-compose up -d --profile ui plakar-ui
@@ -132,9 +124,9 @@ If you delete it, subsequent backups will be much slower and re-upload all data.
 
 ## docker-compose.yml
 
-Three services are available:
+Two services are available:
 
-### `plakar-agent` (Optional)
+### `plakar-agent`
 
 Plakar's built-in scheduler/agent. Runs continuously and executes scheduled backup tasks.
 
@@ -146,22 +138,12 @@ docker-compose up -d --profile agent plakar-agent
 docker-compose exec plakar-agent plakar agent --help
 ```
 
-The agent reads backup schedules from plakar's configuration and handles recurring backups without needing DSM Task Scheduler.
+The agent:
+- Reads backup schedules from plakar's configuration
+- Handles recurring backups without needing DSM Task Scheduler
+- Stores snapshots in the shared kloset
 
-### `plakar-backup`
-
-One-shot backup service. Triggered manually for ad-hoc backups.
-
-```bash
-docker-compose run --rm plakar-backup
-```
-
-Options in `.env`:
-- `BACKUP_SOURCE` — Path to back up (e.g., `/volume1/data`)
-- `B2_*` — S3/B2 credentials and bucket
-- `PLAKAR_PASSPHRASE` — Encryption passphrase
-
-### `plakar-ui` (Optional)
+### `plakar-ui`
 
 Web UI for managing backups and restores. Only started with `--profile ui`.
 
