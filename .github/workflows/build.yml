@@ -72,3 +72,11 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/plakar-docker:v${{ steps.version.outputs.VERSION }}
             ghcr.io/${{ github.repository_owner }}/plakar-docker:latest
+
+      - name: Delete old package versions
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: plakar-docker
+          package-type: container
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: false
