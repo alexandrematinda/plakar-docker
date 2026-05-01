@@ -16,16 +16,30 @@ cp .env.example .env
 
 ### 2. Configure `.env`
 
-Edit `.env` with your Backblaze B2 (or S3-compatible) credentials:
+Edit `.env` with your S3 credentials. Examples:
 
+**Infomaniak S3:**
 ```dotenv
-B2_ACCESS_KEY_ID=your_key_id
-B2_SECRET_ACCESS_KEY=your_secret_key
-B2_BUCKET=your-bucket-name
-B2_ENDPOINT=https://s3.us-west-004.backblazeb2.com
+S3_ACCESS_KEY_ID=your_access_key
+S3_SECRET_ACCESS_KEY=your_secret_key
+S3_BUCKET=your-bucket-name
+S3_ENDPOINT=https://s3.dc-gva.exo.io
+S3_REGION=exo
 PLAKAR_PASSPHRASE=your_strong_passphrase
 BACKUP_SOURCE=/volume1/data
 ```
+
+**Backblaze B2:**
+```dotenv
+S3_ACCESS_KEY_ID=your_b2_key_id
+S3_SECRET_ACCESS_KEY=your_b2_secret_key
+S3_BUCKET=your-bucket-name
+S3_ENDPOINT=https://s3.us-west-004.backblazeb2.com
+PLAKAR_PASSPHRASE=your_strong_passphrase
+BACKUP_SOURCE=/volume1/data
+```
+
+**Any S3-compatible storage** (AWS S3, MinIO, etc.) — adjust `S3_ENDPOINT` and `S3_REGION` accordingly.
 
 ### 3. Run a backup
 
@@ -144,8 +158,21 @@ Plakar is licensed under ISC. This Docker packaging is provided as-is.
 
 ---
 
+## S3 Providers
+
+Plakar works with any S3-compatible storage:
+
+- **Infomaniak** — `https://s3.dc-gva.exo.io` (Switzerland-based, GDPR-friendly)
+- **Backblaze B2** — `https://s3.us-west-004.backblazeb2.com` (US-based)
+- **AWS S3** — `https://s3.region.amazonaws.com`
+- **MinIO** — Self-hosted S3-compatible storage
+- **Others** — Any S3-compatible endpoint
+
+See `.env.example` for configuration examples.
+
 ## Related
 
 - [Plakar GitHub](https://github.com/PlakarKorp/plakar)
 - [Plakar Docs](https://plakar.io)
+- [Infomaniak S3 Docs](https://www.infomaniak.com/en/hosting/object-storage)
 - [Backblaze B2 Pricing](https://www.backblaze.com/b2/cloud-storage-pricing.html)
