@@ -48,6 +48,17 @@ jobs:
             echo "VERSION=1.0.6" >> $GITHUB_OUTPUT
           fi
 
+      - name: Load build args from .buildargs
+        id: buildargs
+        run: |
+          if [ -f .buildargs ]; then
+            grep "^PLAKAR_UID=" .buildargs | cut -d= -f2 | xargs -I {} echo "uid={}" >> $GITHUB_OUTPUT
+            grep "^PLAKAR_GID=" .buildargs | cut -d= -f2 | xargs -I {} echo "gid={}" >> $GITHUB_OUTPUT
+          else
+            echo "uid=1000" >> $GITHUB_OUTPUT
+            echo "gid=1000" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build & push image
         uses: docker/build-push-action@v5
         with:
@@ -56,8 +67,8 @@ jobs:
           push: true
           build-args: |
             VERSION=${{ steps.version.outputs.VERSION }}
-            PLAKAR_UID=${{ github.event.inputs.plakar_uid || '1000' }}
-            PLAKAR_GID=${{ github.event.inputs.plakar_gid || '1000' }}
+            PLAKAR_UID=${{ github.event.inputs.plakar_uid || steps.buildargs.outputs.uid }}
+            PLAKAR_GID=${{ github.event.inputs.plakar_gid || steps.buildargs.outputs.gid }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/plakar-docker:v${{ steps.version.outputs.VERSION }}
             ghcr.io/${{ github.repository_owner }}/plakar-docker:latest
