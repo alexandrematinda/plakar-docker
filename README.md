@@ -16,9 +16,12 @@ mkdir -p /volume1/plakar-docker
 
 # Plakar index storage (persistent, required for deduplication)
 mkdir -p /volume1/plakar/kloset
+chmod 755 /volume1/plakar/kloset
 ```
 
 The `kloset` directory stores plakar's index — it should be kept on persistent storage so deduplication works across backup runs.
+
+**Important**: Ensure the directory has correct permissions for the container's user (UID/GID from `.env`).
 
 ### 1. Clone or setup the repo
 
@@ -157,32 +160,52 @@ Access at `http://nas-ip:9000`
 
 ## Troubleshooting
 
+### Plakar refuses to run (go away casper)
+
+Plakar refuses to run as root. Solutions:
+
+1. **Use correct UID/GID**: Ensure `.env` has `PLAKAR_UID` and `PLAKAR_GID` matching your NAS user (e.g., `1032:100`)
+2. **Rebuild the image** with your UID/GID:
+   ```bash
+   cd /volume1/plakar-docker
+   sudo docker build --build-arg VERSION=1.0.6 --build-arg PLAKAR_UID=1032 --build-arg PLAKAR_GID=100 -t plakar:local .
+   ```
+3. **Use docker run instead of docker-compose** if you need to test:
+   ```bash
+   sudo docker run --rm -v /volume1/plakar/kloset:/home/plakar/.plakar ghcr.io/alexandrematinda/plakar-docker:latest agent --help
+   ```
+
 ### Check logs
 
 ```bash
-docker-compose logs plakar-backup
+docker-compose logs plakar-agent
+docker-compose logs plakar-ui
 ```
 
-### Verify B2 credentials
+### Verify S3 credentials
 
 ```bash
-docker-compose run --rm plakar-backup bucket-list
-```
-
-### Manual backup command
-
-```bash
-docker-compose run --rm plakar-backup backup --store "s3://KEY:SECRET@ENDPOINT/BUCKET" /data
+sudo docker run --rm -e S3_ACCESS_KEY_ID=xxx -e S3_SECRET_ACCESS_KEY=xxx ghcr.io/alexandrematinda/plakar-docker:latest help
 ```
 
 ---
 
 ## Building Locally
 
+Build with your NAS user's UID/GID:
+
 ```bash
-docker build --build-arg VERSION=1.0.6 -t plakar:local .
-docker run --rm plakar:local version
+sudo docker build \
+  --build-arg VERSION=1.0.6 \
+  --build-arg PLAKAR_UID=1032 \
+  --build-arg PLAKAR_GID=100 \
+  -t plakar:local .
+
+# Test
+sudo docker run --rm -v /tmp/test:/home/plakar/.plakar plakar:local agent --help
 ```
+
+**Note**: The `.buildargs` file in the repo sets default UID/GID for automated GitHub builds.
 
 ---
 
