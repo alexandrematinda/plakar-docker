@@ -17,6 +17,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "Dockerfile"
+      - "entrypoint.sh"
+      - ".buildargs"
 
 jobs:
   build:
