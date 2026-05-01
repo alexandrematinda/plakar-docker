@@ -12,4 +12,9 @@ if [ ! -f "/home/plakar/.plakar/CONFIG" ]; then
 fi
 
 # Execute the command passed to the container
-exec "$@"
+# Prepend "plakar" if the first argument is a subcommand (agent, ui, etc.)
+if [ $# -gt 0 ]; then
+  exec plakar "$@"
+else
+  exec plakar
+fi
