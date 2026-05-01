@@ -1,6 +1,21 @@
 version: "3.8"
 
 services:
+  plakar-agent:
+    image: ghcr.io/alexandrematinda/plakar-docker:latest
+    container_name: plakar-agent
+    restart: unless-stopped
+    user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
+    env_file: .env
+    volumes:
+      - ${BACKUP_SOURCE}:/data:ro
+      - /volume1/plakar/kloset:/home/plakar/.plakar
+    environment:
+      - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
+      - TZ=${TZ:-UTC}
+    command: agent
+    profiles: ["agent"]
+
   plakar-backup:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-backup

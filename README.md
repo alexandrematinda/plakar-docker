@@ -54,17 +54,22 @@ BACKUP_SOURCE=/volume1/data
 
 **Any S3-compatible storage** (AWS S3, MinIO, etc.) — adjust `S3_ENDPOINT` and `S3_REGION` accordingly.
 
-### 3. Run a backup
+### 3. Choose a backup strategy
+
+**Option A: Use Plakar's built-in scheduler (Recommended)**
 
 ```bash
-cd /volume1/plakar-docker
-docker-compose run --rm plakar-backup
+# Start the agent
+docker-compose up -d --profile agent plakar-agent
+
+# Configure backup schedules using plakar's agent
+# (See plakar documentation for scheduling configuration)
 ```
 
-Or schedule via Synology **Control Panel > Task Scheduler > Create > Scheduled Task > Custom**:
+**Option B: Manual/ad-hoc backups**
 
 ```bash
-cd /volume1/plakar-docker && docker-compose run --rm plakar-backup
+docker-compose run --rm plakar-backup
 ```
 
 ### 4. (Optional) Launch the UI
@@ -73,7 +78,7 @@ cd /volume1/plakar-docker && docker-compose run --rm plakar-backup
 docker-compose up -d --profile ui plakar-ui
 ```
 
-Then access `http://nas-ip:9000` in your browser.
+Then access `http://nas-ip:9000` in your browser to view backups and restore files.
 
 ---
 
@@ -127,11 +132,25 @@ If you delete it, subsequent backups will be much slower and re-upload all data.
 
 ## docker-compose.yml
 
-Two services are available:
+Three services are available:
+
+### `plakar-agent` (Optional)
+
+Plakar's built-in scheduler/agent. Runs continuously and executes scheduled backup tasks.
+
+```bash
+# Start the agent in the background
+docker-compose up -d --profile agent plakar-agent
+
+# Configure scheduled backups via the agent (documented in plakar-agent(1))
+docker-compose exec plakar-agent plakar agent --help
+```
+
+The agent reads backup schedules from plakar's configuration and handles recurring backups without needing DSM Task Scheduler.
 
 ### `plakar-backup`
 
-One-shot backup service. Triggered manually or via scheduled task.
+One-shot backup service. Triggered manually for ad-hoc backups.
 
 ```bash
 docker-compose run --rm plakar-backup
