@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  plakar-backup:
+    image: ghcr.io/orangees/plakar-docker:latest
+    container_name: plakar-backup
+    restart: "no"
+    env_file: .env
+    volumes:
+      - ${BACKUP_SOURCE}:/data:ro
+      - /volume1/plakar/kloset:/home/plakar/.plakar
+    environment:
+      - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
+    command: >
+      backup
+      --store "s3://${B2_ACCESS_KEY_ID}:${B2_SECRET_ACCESS_KEY}@${B2_ENDPOINT}/${B2_BUCKET}"
+      /data
+
+  plakar-ui:
+    image: ghcr.io/orangees/plakar-docker:latest
+    container_name: plakar-ui
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "9000:9000"
+    volumes:
+      - /volume1/plakar/kloset:/home/plakar/.plakar
+    command: ui --listen 0.0.0.0:9000
+    profiles: ["ui"]
