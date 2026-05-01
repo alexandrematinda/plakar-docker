@@ -6,11 +6,25 @@ Docker image for [Plakar](https://github.com/PlakarKorp/plakar) — a modern bac
 
 ## Quick Start
 
+### 0. Setup directories on Synology
+
+Before running backups, create the required directories:
+
+```bash
+# Docker configuration
+mkdir -p /volume1/plakar-docker
+
+# Plakar index storage (persistent, required for deduplication)
+mkdir -p /volume1/plakar/kloset
+```
+
+The `kloset` directory stores plakar's index — it should be kept on persistent storage so deduplication works across backup runs.
+
 ### 1. Clone or setup the repo
 
 ```bash
 cd /volume1/plakar-docker
-git clone https://github.com/orangees/plakar-docker .
+git clone https://github.com/alexandrematinda/plakar-docker .
 cp .env.example .env
 ```
 
@@ -88,6 +102,26 @@ ghcr.io/orangees/plakar-docker:v1.0.6          # Specific version
 
 - `linux/amd64` (Synology DS-716, DS-716+)
 - `linux/arm64` (ARM-based Synology, Raspberry Pi)
+
+---
+
+## Directory Structure
+
+```
+/volume1/
+├── plakar-docker/          # Git repo (config, Dockerfile, docker-compose.yml)
+│   ├── .env                # Your S3 credentials (git-ignored)
+│   └── docker-compose.yml
+└── plakar/
+    └── kloset/             # Plakar index (persistent, CRITICAL for deduplication)
+```
+
+**Important**: The `kloset` directory must be on persistent storage (`/volume1`), not ephemeral. Plakar uses it to:
+- Store content hashes and deduplication metadata
+- Avoid re-uploading unchanged blocks to S3
+- Enable efficient incremental backups
+
+If you delete it, subsequent backups will be much slower and re-upload all data.
 
 ---
 
