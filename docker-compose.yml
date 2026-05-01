@@ -13,6 +13,18 @@ services:
       - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
       - TZ=${TZ:-UTC}
     command: agent
+    deploy:
+      resources:
+        limits:
+          memory: ${PLAKAR_AGENT_MEMORY_LIMIT:-1g}
+        reservations:
+          memory: ${PLAKAR_AGENT_MEMORY_RESERVE:-512m}
+    healthcheck:
+      test: ["CMD", "plakar", "version"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   plakar-ui:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
@@ -26,3 +38,15 @@ services:
     environment:
       - TZ=${TZ:-UTC}
     command: ui --listen 0.0.0.0:9000
+    deploy:
+      resources:
+        limits:
+          memory: ${PLAKAR_UI_MEMORY_LIMIT:-512m}
+        reservations:
+          memory: ${PLAKAR_UI_MEMORY_RESERVE:-256m}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
