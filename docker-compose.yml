@@ -4,7 +4,7 @@ services:
   plakar-agent:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-agent
-    restart: unless-stopped
+    restart: no
     env_file: .env
     logging:
       driver: "json-file"
@@ -47,7 +47,7 @@ services:
       - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
       - TZ=${TZ:-UTC}
-    command: ui --listen 0.0.0.0:9000
+    command: ui -addr 0.0.0.0:9000 -no-spawn
     deploy:
       resources:
         limits:
