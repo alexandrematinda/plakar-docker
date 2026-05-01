@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl -fsSL "https://github.com/PlakarKorp/plakar/releases/download/v${VERSION}/plakar_${VERSION}_linux_${TARGETARCH}.tar.gz" \
     | tar -xz -C /usr/local/bin plakar && \
     chmod +x /usr/local/bin/plakar && \
-    groupadd -g ${PLAKAR_GID} plakar && \
-    useradd -u ${PLAKAR_UID} -g plakar -d /home/plakar -m plakar
+    groupadd -g ${PLAKAR_GID} plakar 2>/dev/null || groupadd plakar && \
+    useradd -u ${PLAKAR_UID} -g plakar -d /home/plakar -m plakar 2>/dev/null || useradd -g plakar -d /home/plakar -m plakar
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
