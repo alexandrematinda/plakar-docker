@@ -23,8 +23,7 @@ Edit `.env` with your S3 credentials. Examples:
 S3_ACCESS_KEY_ID=your_access_key
 S3_SECRET_ACCESS_KEY=your_secret_key
 S3_BUCKET=your-bucket-name
-S3_ENDPOINT=https://s3.dc-gva.exo.io
-S3_REGION=exo
+S3_ENDPOINT=https://s3.pub1.infomaniak.cloud
 PLAKAR_PASSPHRASE=your_strong_passphrase
 BACKUP_SOURCE=/volume1/data
 ```
@@ -162,7 +161,7 @@ Plakar is licensed under ISC. This Docker packaging is provided as-is.
 
 Plakar works with any S3-compatible storage:
 
-- **Infomaniak** — `https://s3.dc-gva.exo.io` (Switzerland-based, GDPR-friendly)
+- **Infomaniak** — `https://s3.pub1.infomaniak.cloud` (Switzerland-based, GDPR-friendly)
 - **Backblaze B2** — `https://s3.us-west-004.backblazeb2.com` (US-based)
 - **AWS S3** — `https://s3.region.amazonaws.com`
 - **MinIO** — Self-hosted S3-compatible storage
