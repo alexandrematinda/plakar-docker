@@ -18,6 +18,21 @@ services:
       --store "s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${S3_ENDPOINT}/${S3_BUCKET}"
       /data
 
+  plakar-server:
+    image: ghcr.io/alexandrematinda/plakar-docker:latest
+    container_name: plakar-server
+    restart: unless-stopped
+    user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
+    env_file: .env
+    ports:
+      - "${PLAKAR_API_PORT:-8080}:8080"
+    volumes:
+      - /volume1/plakar/kloset:/home/plakar/.plakar
+    environment:
+      - TZ=${TZ:-UTC}
+    command: server --listen 0.0.0.0:8080
+    profiles: ["server"]
+
   plakar-ui:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar-ui
@@ -25,7 +40,7 @@ services:
     user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
     env_file: .env
     ports:
-      - "9000:9000"
+      - "${PLAKAR_UI_PORT:-9000}:9000"
     volumes:
       - /volume1/plakar/kloset:/home/plakar/.plakar
     environment:
