@@ -8,6 +8,10 @@ RUN apk add --no-cache ca-certificates && \
     chmod +x /usr/local/bin/plakar && \
     addgroup -S plakar && adduser -S -G plakar -h /home/plakar plakar
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 USER plakar
 WORKDIR /home/plakar
-ENTRYPOINT ["plakar"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["plakar"]
