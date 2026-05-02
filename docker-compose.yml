@@ -12,7 +12,6 @@ services:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
     container_name: plakar
     restart: unless-stopped
-    user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
     env_file: .env
     logging:
       driver: "json-file"
