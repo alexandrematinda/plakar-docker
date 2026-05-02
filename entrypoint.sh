@@ -29,10 +29,22 @@ if [ $# -eq 0 ]; then
   exec sleep infinity
 fi
 
-# If first arg is "at", it's a plakar command (e.g., "at /path backup /data")
-# Otherwise, treat it as a shell command
-if [ "$1" = "at" ]; then
+# Detect plakar command by looking for 'at' keyword (possibly after flags)
+is_plakar_cmd=false
+for arg in "$@"; do
+  if [ "$arg" = "at" ]; then
+    is_plakar_cmd=true
+    break
+  elif [ "${arg%%-*}" != "" ] && [ "${arg#-}" = "$arg" ]; then
+    # Non-flag positional arg, stop looking
+    break
+  fi
+done
+
+if [ "$is_plakar_cmd" = "true" ]; then
   exec /usr/local/bin/plakar "$@"
+elif [ $# -eq 0 ]; then
+  exec sleep infinity
 else
   # For non-plakar commands, execute directly
   exec "$@"
