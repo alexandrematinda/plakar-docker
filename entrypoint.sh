@@ -9,6 +9,13 @@ if [ ! -f "/home/plakar/.plakar/CONFIG" ]; then
     exit 1
   fi
   plakar create
+
+  # Configure S3 store if variables are set
+  if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
+    echo "Configuring S3 store..."
+    plakar store add s3-store \
+      location="s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${S3_ENDPOINT}/${S3_BUCKET}"
+  fi
 fi
 
 # Execute the command passed to the container
