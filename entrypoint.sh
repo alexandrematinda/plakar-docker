@@ -20,15 +20,9 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
   # Initialize as root (with security check disabled for root)
   $PLAKAR_BIN -disable-security-check create
 
-  # Configure S3 store if variables are set (with proper endpoint handling)
-  if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
-    echo "Configuring S3 store..."
-    # Remove https:// prefix from endpoint if present (plakar doesn't expect it in the location URI)
-    ENDPOINT_HOST="${S3_ENDPOINT#https://}"
-    ENDPOINT_HOST="${ENDPOINT_HOST#http://}"
-    $PLAKAR_BIN -disable-security-check store add s3-store \
-      location="s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${ENDPOINT_HOST}:443/${S3_BUCKET}"
-  fi
+  # Note: S3 store configuration is disabled - configure manually via docker-compose exec if needed
+  # To add S3 store manually, run:
+  # docker-compose exec -T plakar plakar -disable-security-check store add s3-store location="s3://KEY:SECRET@HOST:443/BUCKET"
 
   # Ensure plakar owns the created files
   chown -R plakar:plakar "$PLAKAR_HOME"
