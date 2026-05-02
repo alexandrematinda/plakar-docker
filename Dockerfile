@@ -7,6 +7,7 @@ ARG PLAKAR_GID=1000
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    gosu \
     && rm -rf /var/lib/apt/lists/* && \
     curl -fsSL "https://github.com/PlakarKorp/plakar/releases/download/v${VERSION}/plakar_${VERSION}_linux_${TARGETARCH}.tar.gz" \
     | tar -xz -C /usr/local/bin plakar && \
@@ -18,6 +19,5 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
     chown plakar:plakar /home/plakar
 
-USER plakar
 WORKDIR /home/plakar
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

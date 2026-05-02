@@ -14,26 +14,22 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
 
   # Ensure directory exists and has correct permissions
   mkdir -p "$PLAKAR_HOME"
-  chown plakar:plakar "$PLAKAR_HOME"
   chmod 700 "$PLAKAR_HOME"
 
-  # Run as plakar user for initialization
-  su - plakar -c "$PLAKAR_BIN create"
+  # Initialize plakar repository
+  $PLAKAR_BIN create
 
   # Configure S3 store if variables are set
   if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
     echo "Configuring S3 store..."
-    su - plakar -c "$PLAKAR_BIN store add s3-store location=\"s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${S3_ENDPOINT}/${S3_BUCKET}\""
+    $PLAKAR_BIN store add s3-store \
+      location="s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${S3_ENDPOINT}/${S3_BUCKET}"
   fi
-
-  # Ensure correct permissions after initialization
-  chown -R plakar:plakar "$PLAKAR_HOME"
-  chmod 700 "$PLAKAR_HOME"
 fi
 
-# Execute the command passed to the container as plakar user
+# Execute as plakar user
 if [ $# -gt 0 ]; then
-  exec su - plakar -c "$PLAKAR_BIN $*"
+  exec gosu plakar $PLAKAR_BIN "$@"
 else
-  exec su - plakar -c "$PLAKAR_BIN"
+  exec gosu plakar $PLAKAR_BIN
 fi
