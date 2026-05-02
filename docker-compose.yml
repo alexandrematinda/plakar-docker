@@ -8,10 +8,9 @@ networks:
         - subnet: 172.40.0.0/16
 
 services:
-
-  plakar-ui:
+  plakar:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
-    container_name: plakar-ui
+    container_name: plakar
     restart: unless-stopped
     user: "${PLAKAR_UID:-1000}:${PLAKAR_GID:-1000}"
     env_file: .env
@@ -20,19 +19,24 @@ services:
       options:
         max-size: "${PLAKAR_LOG_MAX_SIZE:-10m}"
         max-file: "${PLAKAR_LOG_MAX_FILE:-5}"
-    ports:
-      - "${PLAKAR_UI_PORT:-9000}:9000"
     networks:
       plakar-net:
         ipv4_address: 172.40.0.10
     volumes:
+      - ${BACKUP_SOURCE}:/data:ro
       - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
+      - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - BACKUP_SOURCE=${BACKUP_SOURCE}
       - TZ=${TZ:-UTC}
     command: sh -c "sleep infinity"
     deploy:
       resources:
         limits:
-          memory: ${PLAKAR_UI_MEMORY_LIMIT:-512m}
+          memory: ${PLAKAR_MEMORY_LIMIT:-512m}
         reservations:
-          memory: ${PLAKAR_UI_MEMORY_RESERVE:-256m}
+          memory: ${PLAKAR_MEMORY_RESERVE:-256m}
