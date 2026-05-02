@@ -20,11 +20,14 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
   # Initialize as root (with security check disabled for root)
   $PLAKAR_BIN -disable-security-check create
 
-  # Configure S3 store if variables are set
+  # Configure S3 store if variables are set (with proper endpoint handling)
   if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
     echo "Configuring S3 store..."
+    # Remove https:// prefix from endpoint if present (plakar doesn't expect it in the location URI)
+    ENDPOINT_HOST="${S3_ENDPOINT#https://}"
+    ENDPOINT_HOST="${ENDPOINT_HOST#http://}"
     $PLAKAR_BIN -disable-security-check store add s3-store \
-      location="s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${S3_ENDPOINT}/${S3_BUCKET}"
+      location="s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${ENDPOINT_HOST}:443/${S3_BUCKET}"
   fi
 
   # Ensure plakar owns the created files
