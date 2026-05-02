@@ -1,5 +1,12 @@
 version: "3.8"
 
+networks:
+  plakar-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.40.0.0/16
+
 services:
 
   plakar-ui:
@@ -15,6 +22,9 @@ services:
         max-file: "${PLAKAR_LOG_MAX_FILE:-5}"
     ports:
       - "${PLAKAR_UI_PORT:-9000}:9000"
+    networks:
+      plakar-net:
+        ipv4_address: 172.40.0.10
     volumes:
       - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
