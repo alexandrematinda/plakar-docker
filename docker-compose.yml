@@ -37,6 +37,6 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${PLAKAR_MEMORY_LIMIT:-512m}
+          memory: "${PLAKAR_MEMORY_LIMIT:-512m}"
         reservations:
-          memory: ${PLAKAR_MEMORY_RESERVE:-256m}
+          memory: "${PLAKAR_MEMORY_RESERVE:-256m}"
