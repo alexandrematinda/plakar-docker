@@ -18,7 +18,9 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
   chmod 700 "$PLAKAR_HOME"
 
   # Initialize as root (with security check disabled for root)
-  $PLAKAR_BIN -disable-security-check create
+  echo "Running: $PLAKAR_BIN -disable-security-check create"
+  $PLAKAR_BIN -disable-security-check create 2>&1 || true
+  echo "Create exit code: $?"
 
   # Note: S3 store configuration is disabled - configure manually via docker-compose exec if needed
   # To add S3 store manually, run:
