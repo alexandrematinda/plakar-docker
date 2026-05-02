@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 PLAKAR_BIN="/usr/local/bin/plakar"
 PLAKAR_HOME="/home/plakar/.plakar"
@@ -17,7 +16,8 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
 
   # Initialize as root (with security check disabled for root)
   # Plakar flags should come first, then 'at /path', then command
-  $PLAKAR_BIN -disable-security-check at "$PLAKAR_HOME" create
+  # Allow this to fail silently - container will keep running
+  $PLAKAR_BIN -disable-security-check at "$PLAKAR_HOME" create || echo "Warning: plakar create failed"
 fi
 
 # Execute: if command is from docker-compose (sh -c sleep), keep container alive
