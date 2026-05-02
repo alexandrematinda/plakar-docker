@@ -29,16 +29,10 @@ services:
       - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
       - TZ=${TZ:-UTC}
-    command: ui -addr 0.0.0.0:9000 -no-spawn -no-auth
+    command: sh -c "sleep infinity"
     deploy:
       resources:
         limits:
           memory: ${PLAKAR_UI_MEMORY_LIMIT:-512m}
         reservations:
           memory: ${PLAKAR_UI_MEMORY_RESERVE:-256m}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
