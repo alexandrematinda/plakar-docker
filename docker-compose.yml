@@ -1,35 +1,6 @@
 version: "3.8"
 
 services:
-  plakar-agent:
-    image: ghcr.io/alexandrematinda/plakar-docker:latest
-    container_name: plakar-agent
-    restart: no
-    env_file: .env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "${PLAKAR_LOG_MAX_SIZE:-10m}"
-        max-file: "${PLAKAR_LOG_MAX_FILE:-5}"
-    volumes:
-      - ${BACKUP_SOURCE}:/data:ro
-      - ${PLAKAR_HOME}:/home/plakar/.plakar
-    environment:
-      - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
-      - TZ=${TZ:-UTC}
-    command: agent
-    deploy:
-      resources:
-        limits:
-          memory: ${PLAKAR_AGENT_MEMORY_LIMIT:-1g}
-        reservations:
-          memory: ${PLAKAR_AGENT_MEMORY_RESERVE:-512m}
-    healthcheck:
-      test: ["CMD", "plakar", "version"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   plakar-ui:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
@@ -47,7 +18,7 @@ services:
       - ${PLAKAR_HOME}:/home/plakar/.plakar
     environment:
       - TZ=${TZ:-UTC}
-    command: ui -addr 0.0.0.0:9000 -no-spawn
+    command: ui -addr 0.0.0.0:9000 -no-spawn -no-auth
     deploy:
       resources:
         limits:
