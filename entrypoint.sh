@@ -1,31 +1,39 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-PLAKAR_BIN="/usr/local/bin/plakar"
-PLAKAR_HOME="/home/plakar/.plakar"
+INIT=${INIT:=false}
+P_PATH=${P_PATH:=/home/plakar/.plakar}
 
-# Initialize kloset if it doesn't exist and we haven't tried yet
-if [ ! -f "$PLAKAR_HOME/CONFIG" ] && [ ! -f "$PLAKAR_HOME/.init_attempted" ]; then
-  echo "Initializing plakar repository..."
-  if [ -z "$PLAKAR_PASSPHRASE" ]; then
-    echo "ERROR: PLAKAR_PASSPHRASE not set. Cannot initialize repository."
-    exit 1
+if [ "${INIT}" = "true" ]; then
+  echo "[plakar-init] Creating repository at ${P_PATH}"
+  mkdir -p "$(dirname "$P_PATH")"
+
+  # Create the repository
+  /usr/local/bin/plakar at "${P_PATH}" create
+
+  # Configure S3 store if credentials provided
+  if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
+    echo "[plakar-init] Configuring S3 store..."
+    # Strip https:// or http:// from endpoint if present
+    S3_HOST="${S3_ENDPOINT#https://}"
+    S3_HOST="${S3_HOST#http://}"
+    S3_LOCATION="s3://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@${S3_HOST}/${S3_BUCKET}"
+    /usr/local/bin/plakar -disable-security-check at "${P_PATH}" store add s3-backup "location=${S3_LOCATION}" || true
   fi
 
-  # Ensure directory exists - no chown/chmod for mounted volumes
-  mkdir -p "$PLAKAR_HOME"
-
-  # Mark that we've attempted initialization (to avoid infinite loops)
-  touch "$PLAKAR_HOME/.init_attempted"
-
-  # Initialize as root (with security check disabled for root)
-  # Plakar flags should come first, then 'at /path', then command
-  $PLAKAR_BIN -disable-security-check at "$PLAKAR_HOME" create || echo "Warning: plakar create failed"
+  echo "[plakar-init] Repository initialized successfully"
 fi
 
-# Execute: if command is from docker-compose (sh -c sleep), keep container alive
-# Otherwise execute plakar with the given arguments
-if [ $# -eq 0 ] || [ "$1" = "sh" ] || [ "$1" = "bash" ]; then
+# If no command provided, keep container alive
+if [ $# -eq 0 ]; then
   exec sleep infinity
+fi
+
+# If first arg is "at", it's a plakar command (e.g., "at /path backup /data")
+# Otherwise, treat it as a shell command
+if [ "$1" = "at" ]; then
+  exec /usr/local/bin/plakar "$@"
 else
-  exec $PLAKAR_BIN -disable-security-check "$@"
+  # For non-plakar commands, execute directly
+  exec "$@"
 fi
