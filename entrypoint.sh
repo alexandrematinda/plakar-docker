@@ -31,5 +31,10 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
   chown -R plakar:plakar "$PLAKAR_HOME"
 fi
 
-# Execute plakar with security check disabled (running as root in container)
-exec $PLAKAR_BIN -disable-security-check "$@"
+# Execute: if command is from docker-compose (sh -c sleep), keep container alive
+# Otherwise execute plakar with the given arguments
+if [ $# -eq 0 ] || [ "$1" = "sh" ] || [ "$1" = "bash" ]; then
+  exec sleep infinity
+else
+  exec $PLAKAR_BIN -disable-security-check "$@"
+fi
