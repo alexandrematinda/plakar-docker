@@ -3,8 +3,8 @@
 PLAKAR_BIN="/usr/local/bin/plakar"
 PLAKAR_HOME="/home/plakar/.plakar"
 
-# Initialize kloset if it doesn't exist
-if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
+# Initialize kloset if it doesn't exist and we haven't tried yet
+if [ ! -f "$PLAKAR_HOME/CONFIG" ] && [ ! -f "$PLAKAR_HOME/.init_attempted" ]; then
   echo "Initializing plakar repository..."
   if [ -z "$PLAKAR_PASSPHRASE" ]; then
     echo "ERROR: PLAKAR_PASSPHRASE not set. Cannot initialize repository."
@@ -14,9 +14,11 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
   # Ensure directory exists - no chown/chmod for mounted volumes
   mkdir -p "$PLAKAR_HOME"
 
+  # Mark that we've attempted initialization (to avoid infinite loops)
+  touch "$PLAKAR_HOME/.init_attempted"
+
   # Initialize as root (with security check disabled for root)
   # Plakar flags should come first, then 'at /path', then command
-  # Allow this to fail silently - container will keep running
   $PLAKAR_BIN -disable-security-check at "$PLAKAR_HOME" create || echo "Warning: plakar create failed"
 fi
 
