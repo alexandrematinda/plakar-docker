@@ -7,7 +7,6 @@ ARG PLAKAR_GID=1000
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
-    gosu \
     && rm -rf /var/lib/apt/lists/* && \
     curl -fsSL "https://github.com/PlakarKorp/plakar/releases/download/v${VERSION}/plakar_${VERSION}_linux_${TARGETARCH}.tar.gz" \
     | tar -xz -C /usr/local/bin plakar && \
