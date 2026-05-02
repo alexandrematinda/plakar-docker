@@ -16,8 +16,8 @@ if [ ! -f "$PLAKAR_HOME/CONFIG" ]; then
   mkdir -p "$PLAKAR_HOME"
 
   # Initialize as root (with security check disabled for root)
-  # Plakar requires 'at /path/to/repo' before the command
-  $PLAKAR_BIN at "$PLAKAR_HOME" -disable-security-check create
+  # Plakar flags should come first, then 'at /path', then command
+  $PLAKAR_BIN -disable-security-check at "$PLAKAR_HOME" create
 fi
 
 # Execute: if command is from docker-compose (sh -c sleep), keep container alive
