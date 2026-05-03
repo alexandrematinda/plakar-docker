@@ -5,33 +5,29 @@ INIT=${INIT:=false}
 P_PATH=${P_PATH:=/home/plakar/.plakar}
 
 if [ "${INIT}" = "true" ]; then
-  echo "[plakar-init] Creating repository at ${P_PATH}"
+  echo "[plakar-init] Creating local repository at ${P_PATH}"
   mkdir -p "$(dirname "$P_PATH")"
 
-  # Install S3 plugin if credentials provided
-  if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
-    echo "[plakar-init] Installing S3 plugin..."
-    /usr/local/bin/plakar pkg add s3 || echo "[plakar-init] S3 plugin already installed or error"
-  fi
-
-  # Create the repository
+  # Create the local repository
   /usr/local/bin/plakar at "${P_PATH}" create
 
-  # Configure S3 store globally if credentials provided
+  # Configure rclone for S3 sync if credentials provided
   if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
-    echo "[plakar-init] Configuring S3 store..."
-    # Strip https:// or http:// from endpoint if present
-    S3_HOST="${S3_ENDPOINT#https://}"
-    S3_HOST="${S3_HOST#http://}"
+    echo "[plakar-init] Configuring rclone for S3..."
+    mkdir -p /home/plakar/.config/rclone
 
-    # Register S3 store with correct syntax (secret_access_key, use_tls)
-    /usr/local/bin/plakar store add s3-backup \
-      "location=s3://${S3_HOST}/${S3_BUCKET}" \
-      "access_key=${S3_ACCESS_KEY_ID}" \
-      "secret_access_key=${S3_SECRET_ACCESS_KEY}" \
-      "use_tls=true" || true
+    # Create rclone config for Infomaniak S3
+    cat > /home/plakar/.config/rclone/rclone.conf << RCLONEEOF
+[infomaniak]
+type = s3
+provider = Other
+access_key_id = ${S3_ACCESS_KEY_ID}
+secret_access_key = ${S3_SECRET_ACCESS_KEY}
+endpoint = https://${S3_ENDPOINT}
+RCLONEEOF
 
-    echo "[plakar-init] S3 store configured at ${S3_HOST}/${S3_BUCKET}"
+    echo "[plakar-init] rclone configured for S3 sync"
+    echo "[plakar-init] Use: rclone sync ${P_PATH}/packfiles infomaniak:${S3_BUCKET}/packfiles"
   fi
 
   echo "[plakar-init] Repository initialized successfully"
