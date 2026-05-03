@@ -8,6 +8,12 @@ if [ "${INIT}" = "true" ]; then
   echo "[plakar-init] Creating repository at ${P_PATH}"
   mkdir -p "$(dirname "$P_PATH")"
 
+  # Install S3 plugin if credentials provided
+  if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
+    echo "[plakar-init] Installing S3 plugin..."
+    /usr/local/bin/plakar pkg add s3 || echo "[plakar-init] S3 plugin already installed or error"
+  fi
+
   # Create the repository
   /usr/local/bin/plakar at "${P_PATH}" create
 
@@ -18,16 +24,12 @@ if [ "${INIT}" = "true" ]; then
     S3_HOST="${S3_ENDPOINT#https://}"
     S3_HOST="${S3_HOST#http://}"
 
-    # Create config directory
-    mkdir -p /home/plakar/.config/plakar
-
-    # Create stores.yml with S3 configuration using variable expansion
-    cat > /home/plakar/.config/plakar/stores.yml << STOREEOF
-s3-backup:
-  location: s3://${S3_HOST}/${S3_BUCKET}
-  access_key: ${S3_ACCESS_KEY_ID}
-  secret_key: ${S3_SECRET_ACCESS_KEY}
-STOREEOF
+    # Register S3 store with correct syntax (secret_access_key, use_tls)
+    /usr/local/bin/plakar store add s3-backup \
+      "location=s3://${S3_HOST}/${S3_BUCKET}" \
+      "access_key=${S3_ACCESS_KEY_ID}" \
+      "secret_access_key=${S3_SECRET_ACCESS_KEY}" \
+      "use_tls=true" || true
 
     echo "[plakar-init] S3 store configured at ${S3_HOST}/${S3_BUCKET}"
   fi
