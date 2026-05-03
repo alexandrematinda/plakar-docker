@@ -1,8 +1,32 @@
 # plakar-docker
 
-Docker image for [Plakar](https://github.com/PlakarKorp/plakar) — a modern backup and restore tool with deduplication, encryption, and S3/B2 support.
+Docker image for [Plakar](https://github.com/PlakarKorp/plakar) — a modern backup and restore tool with deduplication, encryption, and cloud storage support.
 
-> Plakar is a content-addressable backup and restore tool that works with local filesystems, S3-compatible stores (Backblaze B2, AWS S3, etc.), SFTP, and more.
+> Plakar is a content-addressable backup and restore tool. This image combines plakar for local backups with **rclone** for cloud synchronization to S3-compatible storage (AWS S3, Infomaniak, Backblaze B2, etc.).
+
+## How It Works
+
+This image uses a **two-step backup approach**:
+
+1. **Plakar** — Creates encrypted, deduplicated snapshots in a local repository (`/home/plakar/.plakar`)
+2. **rclone** — Syncs the backup data to S3-compatible cloud storage (Infomaniak, AWS, B2, etc.)
+
+**Benefits:**
+- ✅ Plakar backup works reliably (no S3 signature issues)
+- ✅ rclone handles cloud sync securely
+- ✅ Flexible — use any S3-compatible provider
+- ✅ Fast incremental syncs (rclone only transfers new/changed packfiles)
+
+**Workflow:**
+```bash
+# 1. Create local backup with plakar
+docker run -e INIT=true ... plakar-docker backup /data
+
+# 2. Sync to cloud with rclone
+rclone sync /path/to/plakar/packfiles infomaniak:bucket-name/backups
+```
+
+---
 
 ## Quick Start
 
@@ -57,17 +81,38 @@ BACKUP_SOURCE=/volume1/data
 
 **Any S3-compatible storage** (AWS S3, MinIO, etc.) — adjust `S3_ENDPOINT` and `S3_REGION` accordingly.
 
-### 3. Start the backup agent
+### 3. Initialize the repository and configure rclone
 
 ```bash
-# Start the agent (runs scheduled backups automatically)
-docker-compose up -d --profile agent plakar-agent
-
-# Configure backup schedules via plakar's agent configuration
-# (See plakar documentation for scheduling)
+# Create local plakar repository with rclone config
+docker-compose run --rm plakar-backup -e INIT=true
 ```
 
-### 4. Launch the UI
+This will:
+- ✓ Create the local plakar repository
+- ✓ Configure rclone with your S3 credentials (in container)
+- ✓ Print the rclone sync command to use
+
+### 4. Run a backup
+
+```bash
+# Create a plakar snapshot from your data
+docker-compose run --rm plakar-backup backup /data
+```
+
+### 5. Sync to cloud storage
+
+After each backup, sync the plakar packfiles to S3:
+
+```bash
+# Option A: Run via docker
+docker-compose run --rm plakar-sync
+
+# Option B: Run rclone directly on your NAS
+rclone sync /volume1/plakar/kloset/packfiles infomaniak:nas-db-backups/backups/packfiles
+```
+
+### 6. (Optional) Launch the UI
 
 ```bash
 docker-compose up -d --profile ui plakar-ui
@@ -79,11 +124,12 @@ Then access `http://nas-ip:9000` in your browser to view backups and restore fil
 
 ## Features
 
-- **Deduplication** — Only store unique blocks
-- **Encryption** — AES-256 encrypted snapshots
-- **S3/B2 Compatible** — Works with Backblaze B2, AWS S3, MinIO, etc.
-- **Statically Compiled** — No dependencies, pure binary
-- **Alpine-based** — ~15 MB image size
+- **Deduplication** — Only store unique blocks (Plakar)
+- **Encryption** — AES-256 encrypted snapshots (Plakar)
+- **Cloud Sync** — rclone syncs to any S3-compatible provider
+- **Flexible** — Works with Infomaniak, AWS S3, Backblaze B2, MinIO, etc.
+- **Efficient** — Incremental syncs, only transfers new packfiles
+- **Reliable** — Plakar local backups work without cloud issues, rclone handles sync
 
 ---
 
