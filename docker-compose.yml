@@ -24,7 +24,6 @@ services:
     volumes:
       - ${BACKUP_SOURCE}:/data:ro
       - ${PLAKAR_HOME}:/home/plakar/.plakar
-      - ./scheduler.yaml:/home/plakar/scheduler.yaml:ro
     environment:
       - INIT=true
       - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}

@@ -5,19 +5,24 @@ INIT=${INIT:=false}
 P_PATH=${P_PATH:=/home/plakar/.plakar}
 
 if [ "${INIT}" = "true" ]; then
-  echo "[plakar-init] Creating local repository at ${P_PATH}"
+  echo "[plakar-init] Setting up repository at ${P_PATH}"
   mkdir -p "$(dirname "$P_PATH")"
 
-  # Create the local repository
-  /usr/local/bin/plakar at "${P_PATH}" create
+  # Create the local repository (if it doesn't exist)
+  if [ ! -f "${P_PATH}/CONFIG" ]; then
+    echo "[plakar-init] Creating local repository..."
+    /usr/local/bin/plakar at "${P_PATH}" create
+  else
+    echo "[plakar-init] Repository already exists"
+  fi
 
   # Configure rclone for S3 sync if credentials provided
   if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ]; then
     echo "[plakar-init] Configuring rclone for S3..."
-    mkdir -p /home/plakar/.config/rclone
+    mkdir -p /root/.config/rclone
 
     # Create rclone config for Infomaniak S3
-    cat > /home/plakar/.config/rclone/rclone.conf << RCLONEEOF
+    cat > /root/.config/rclone/rclone.conf << RCLONEEOF
 [infomaniak]
 type = s3
 provider = Other
@@ -36,10 +41,10 @@ fi
 # Setup rclone cron job for sync (if configured)
 if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ]; then
   echo "[plakar-init] Setting up rclone sync cron job..."
-  mkdir -p /home/plakar/.config/rclone
+  mkdir -p /root/.config/rclone
 
-  # Create rclone config
-  cat > /home/plakar/.config/rclone/rclone.conf << RCLONEEOF
+  # Create rclone config in root's config directory
+  cat > /root/.config/rclone/rclone.conf << RCLONEEOF
 [infomaniak]
 type = s3
 provider = Other
@@ -60,17 +65,21 @@ fi
 
 # If no command provided, run agent or keep alive
 if [ $# -eq 0 ]; then
-  # Start crond daemon if it exists
-  if command -v crond >/dev/null 2>&1; then
+  # Start cron daemon if it exists
+  if command -v cron >/dev/null 2>&1 || command -v /etc/init.d/cron >/dev/null 2>&1; then
     echo "[plakar-entrypoint] Starting cron daemon..."
-    crond -f &
-    CROND_PID=$!
+    service cron start
   fi
 
-  # If SCHEDULER_FILE exists, run plakar agent
+  # If SCHEDULER_FILE exists, copy to kloset and run plakar agent
   if [ -f "$SCHEDULER_FILE" ]; then
-    echo "[plakar-entrypoint] Starting plakar agent with scheduler..."
-    exec /usr/local/bin/plakar agent -tasks "$SCHEDULER_FILE"
+    echo "[plakar-entrypoint] Setting up scheduler file..."
+    cp "$SCHEDULER_FILE" "${P_PATH}/scheduler.yaml"
+    echo "[plakar-entrypoint] Starting plakar agent..."
+    export PLAKAR_REPOSITORY="${P_PATH}"
+    /usr/local/bin/plakar agent start
+    echo "[plakar-entrypoint] Plakar agent started, keeping container alive..."
+    exec sleep infinity
   else
     # No scheduler, just keep alive
     echo "[plakar-entrypoint] No scheduler configured, keeping container alive..."
