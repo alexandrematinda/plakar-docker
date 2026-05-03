@@ -33,9 +33,49 @@ RCLONEEOF
   echo "[plakar-init] Repository initialized successfully"
 fi
 
-# If no command provided, keep container alive
+# Setup rclone cron job for sync (if configured)
+if [ -n "$S3_ACCESS_KEY_ID" ] && [ -n "$S3_SECRET_ACCESS_KEY" ] && [ -n "$S3_BUCKET" ]; then
+  echo "[plakar-init] Setting up rclone sync cron job..."
+  mkdir -p /home/plakar/.config/rclone
+
+  # Create rclone config
+  cat > /home/plakar/.config/rclone/rclone.conf << RCLONEEOF
+[infomaniak]
+type = s3
+provider = Other
+access_key_id = ${S3_ACCESS_KEY_ID}
+secret_access_key = ${S3_SECRET_ACCESS_KEY}
+endpoint = https://${S3_ENDPOINT}
+RCLONEEOF
+
+  # Create cron job for hourly sync
+  mkdir -p /etc/cron.hourly
+  cat > /etc/cron.hourly/plakar-sync << CRONEOF
+#!/bin/sh
+/usr/bin/rclone sync /home/plakar/.plakar/packfiles infomaniak:${S3_BUCKET}/plakar-backup/packfiles -q 2>&1 | logger -t plakar-sync
+CRONEOF
+  chmod +x /etc/cron.hourly/plakar-sync
+  echo "[plakar-init] rclone sync configured for hourly execution"
+fi
+
+# If no command provided, run agent or keep alive
 if [ $# -eq 0 ]; then
-  exec sleep infinity
+  # Start crond daemon if it exists
+  if command -v crond >/dev/null 2>&1; then
+    echo "[plakar-entrypoint] Starting cron daemon..."
+    crond -f &
+    CROND_PID=$!
+  fi
+
+  # If SCHEDULER_FILE exists, run plakar agent
+  if [ -f "$SCHEDULER_FILE" ]; then
+    echo "[plakar-entrypoint] Starting plakar agent with scheduler..."
+    exec /usr/local/bin/plakar agent -tasks "$SCHEDULER_FILE"
+  else
+    # No scheduler, just keep alive
+    echo "[plakar-entrypoint] No scheduler configured, keeping container alive..."
+    exec sleep infinity
+  fi
 fi
 
 # Detect plakar command by looking for 'at' keyword (possibly after flags)
@@ -52,8 +92,6 @@ done
 
 if [ "$is_plakar_cmd" = "true" ]; then
   exec /usr/local/bin/plakar "$@"
-elif [ $# -eq 0 ]; then
-  exec sleep infinity
 else
   # For non-plakar commands, execute directly
   exec "$@"

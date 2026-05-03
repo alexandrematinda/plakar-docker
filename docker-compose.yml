@@ -8,9 +8,9 @@ networks:
         - subnet: 172.40.0.0/16
 
 services:
-  plakar:
+  plakar-agent:
     image: ghcr.io/alexandrematinda/plakar-docker:latest
-    container_name: plakar
+    container_name: plakar-agent
     restart: unless-stopped
     env_file: .env
     logging:
@@ -24,15 +24,48 @@ services:
     volumes:
       - ${BACKUP_SOURCE}:/data:ro
       - ${PLAKAR_HOME}:/home/plakar/.plakar
+      - ./scheduler.yaml:/home/plakar/scheduler.yaml:ro
     environment:
+      - INIT=true
       - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
       - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
       - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
       - S3_BUCKET=${S3_BUCKET}
       - S3_ENDPOINT=${S3_ENDPOINT}
       - BACKUP_SOURCE=${BACKUP_SOURCE}
+      - SCHEDULER_FILE=/home/plakar/scheduler.yaml
       - TZ=${TZ:-UTC}
-    command: sh -c "sleep infinity"
+    deploy:
+      resources:
+        limits:
+          memory: "${PLAKAR_MEMORY_LIMIT:-512m}"
+        reservations:
+          memory: "${PLAKAR_MEMORY_RESERVE:-256m}"
+    healthcheck:
+      test: ["CMD", "test", "-f", "${PLAKAR_HOME}/CONFIG"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  plakar-ui:
+    image: ghcr.io/alexandrematinda/plakar-docker:latest
+    container_name: plakar-ui
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      plakar-net:
+        ipv4_address: 172.40.0.11
+    ports:
+      - "${PLAKAR_UI_PORT:-9000}:9000"
+    volumes:
+      - ${PLAKAR_HOME}:/home/plakar/.plakar:ro
+    environment:
+      - PLAKAR_PASSPHRASE=${PLAKAR_PASSPHRASE}
+      - TZ=${TZ:-UTC}
+    command: -no-agent at /home/plakar/.plakar ui --listen 0.0.0.0:9000
+    profiles:
+      - ui
     deploy:
       resources:
         limits:

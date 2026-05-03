@@ -1,0 +1,8 @@
+agent:
+  tasks:
+    - name: Daily backup to local repository
+      repository: "@local"
+      backup:
+        path: /data
+        interval: 24h
+        check: true
